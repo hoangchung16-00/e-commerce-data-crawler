@@ -37,7 +37,7 @@
                 <td class="text-muted">URL:</td>
                 <td>
                   <% if @product.url %>
-                    <%= link_to truncate(@product.url, length: 40), @product.url, target: "_blank", rel: "noopener" %>
+                    <%= link_to truncate(@product.safe_url, length: 40), @product.safe_url, target: "_blank", rel: "noopener" %>
                   <% else %>
                     <span class="text-muted">-</span>
                   <% end %>
