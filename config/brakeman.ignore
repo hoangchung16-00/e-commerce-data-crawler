@@ -1,0 +1,25 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 4,
+      "fingerprint": "7bd6cc81eacd6069490403c40fdcf4e6d32b50c3702b583bb66c4dd410167222",
+      "check_name": "LinkToHref",
+      "message": "Potentially unsafe model attribute in `link_to` href",
+      "file": "app/views/products/show.html.erb",
+      "line": 40,
+      "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
+      "code": "link_to(truncate(Product.find(params[:id]).safe_url, :length => 40), Product.find(params[:id]).safe_url, :target => \"_blank\", :rel => \"noopener noreferrer\")",
+      "render_path": null,
+      "location": {
+        "type": "template",
+        "template": "products/show"
+      },
+      "user_input": "Product.find(params[:id]).safe_url",
+      "confidence": "Weak",
+      "note": "safe_url validates URL is a URI::HTTP/HTTPS object, preventing javascript: and other unsafe schemes"
+    }
+  ],
+  "updated": "2026-07-11 15:55:00 +0000",
+  "brakeman_version": "8.0.5"
+}
