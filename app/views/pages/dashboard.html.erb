@@ -1,0 +1,133 @@
+<% content_for :page_title, "Dashboard" %>
+
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="card-title text-muted">Total Campaigns</h5>
+        <h2 class="text-primary"><%= @campaigns.count %></h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="card-title text-muted">Active Campaigns</h5>
+        <h2 class="text-success"><%= @campaigns.where(status: 'active').count %></h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="card-title text-muted">Total Products</h5>
+        <h2 class="text-info"><%= @campaigns.sum { |c| c.products.count } %></h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="card-title text-muted">Price Records</h5>
+        <h2 class="text-warning"><%= PriceHistory.joins(:product => :campaign).where(campaigns: { user_id: current_user.id }).count %></h2>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Recent Campaigns</h5>
+        <%= link_to "View All", campaigns_path, class: "btn btn-sm btn-primary" %>
+      </div>
+      <div class="card-body">
+        <% if @campaigns.any? %>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Products</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @campaigns.limit(5).each do |campaign| %>
+                  <tr>
+                    <td>
+                      <%= link_to campaign.name, campaign_path(campaign) %>
+                    </td>
+                    <td>
+                      <span class="badge bg-info"><%= campaign.target_source %></span>
+                    </td>
+                    <td>
+                      <% if campaign.status == 'active' %>
+                        <span class="badge bg-success">Active</span>
+                      <% elsif campaign.status == 'paused' %>
+                        <span class="badge bg-warning">Paused</span>
+                      <% else %>
+                        <span class="badge bg-danger">Stopped</span>
+                      <% end %>
+                    </td>
+                    <td><%= campaign.products.count %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <p class="text-muted text-center py-4">No campaigns yet. <%= link_to "Create one", new_campaign_path %></p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Recent Products</h5>
+        <%= link_to "View All", products_path, class: "btn btn-sm btn-primary" %>
+      </div>
+      <div class="card-body">
+        <% if @recent_products.any? %>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Product</th>
+                  <th>Campaign</th>
+                  <th>Latest Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @recent_products.each do |product| %>
+                  <tr>
+                    <td>
+                      <%= link_to truncate(product.name, length: 30), product_path(product) %>
+                    </td>
+                    <td>
+                      <small><%= product.campaign.name %></small>
+                    </td>
+                    <td>
+                      <% latest_price = product.price_histories.order(recorded_at: :desc).first %>
+                      <% if latest_price %>
+                        <strong><%= number_to_currency(latest_price.price, unit: "", precision: 0) %></strong>
+                      <% else %>
+                        <span class="text-muted">-</span>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <p class="text-muted text-center py-4">No products yet.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

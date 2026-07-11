@@ -1,0 +1,123 @@
+<% content_for :page_title, @campaign.name %>
+
+<div class="row mb-4">
+  <div class="col-md-8">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2><%= @campaign.name %></h2>
+      <div>
+        <%= link_to "Edit", edit_campaign_path(@campaign), class: "btn btn-warning btn-sm" %>
+        <%= link_to "Delete", campaign_path(@campaign), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-danger btn-sm" %>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card text-center">
+          <div class="card-body">
+            <h6 class="card-title text-muted">Keyword</h6>
+            <p class="mb-0"><strong><%= @campaign.keyword %></strong></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center">
+          <div class="card-body">
+            <h6 class="card-title text-muted">Source</h6>
+            <p class="mb-0"><span class="badge bg-info"><%= @campaign.target_source %></span></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center">
+          <div class="card-body">
+            <h6 class="card-title text-muted">Status</h6>
+            <p class="mb-0">
+              <% if @campaign.status == 'active' %>
+                <span class="badge bg-success">Active</span>
+              <% elsif @campaign.status == 'paused' %>
+                <span class="badge bg-warning">Paused</span>
+              <% else %>
+                <span class="badge bg-danger">Stopped</span>
+              <% end %>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center">
+          <div class="card-body">
+            <h6 class="card-title text-muted">Products</h6>
+            <p class="mb-0"><strong><%= @products.total_count %></strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-light d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Products in this Campaign</h5>
+  </div>
+  <div class="card-body">
+    <% if @products.any? %>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Product Name</th>
+              <th>External ID</th>
+              <th>Latest Price</th>
+              <th>Discount</th>
+              <th>Last Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @products.each do |product| %>
+              <tr>
+                <td>
+                  <strong><%= link_to truncate(product.name, length: 40), product_path(product) %></strong>
+                </td>
+                <td>
+                  <small class="text-muted"><%= product.external_id %></small>
+                </td>
+                <td>
+                  <% latest_price = product.price_histories.order(recorded_at: :desc).first %>
+                  <% if latest_price %>
+                    <strong><%= number_to_currency(latest_price.price, unit: "", precision: 0) %></strong>
+                    <% if latest_price.discount_rate %>
+                      <small class="text-danger">-<%= latest_price.discount_rate %>%</small>
+                    <% end %>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
+                </td>
+                <td>
+                  <% latest_price = product.price_histories.order(recorded_at: :desc).first %>
+                  <% if latest_price && latest_price.discount_rate %>
+                    <span class="badge bg-danger"><%= latest_price.discount_rate %>%</span>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
+                </td>
+                <td>
+                  <small class="text-muted"><%= time_ago_in_words(product.updated_at) %> ago</small>
+                </td>
+                <td>
+                  <%= link_to "View", product_path(product), class: "btn btn-sm btn-info" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="mt-4">
+        <%= paginate @products %>
+      </nav>
+    <% else %>
+      <p class="text-muted text-center py-4">No products in this campaign yet.</p>
+    <% end %>
+  </div>
+</div>
