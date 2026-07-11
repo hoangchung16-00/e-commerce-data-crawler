@@ -36,11 +36,12 @@
               <tr>
                 <td class="text-muted">URL:</td>
                 <td>
-									<% if @product.safe_url.present? %>
-										<%= link_to truncate(@product.safe_url, length: 40), @product.safe_url, target: "_blank", rel: "noopener noreferrer" %>
-									<% else %>
-									  <span class="text-muted">-</span>
-									<% end %>
+                  <% safe_url = safe_product_url(@product.url) %>
+                  <% if safe_url %>
+                    <%= link_to truncate(safe_url, length: 40), safe_url, target: "_blank", rel: "noopener noreferrer" %>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
                 </td>
               </tr>
               <% if @product.raw_attributes.any? %>
