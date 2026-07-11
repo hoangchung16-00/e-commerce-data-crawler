@@ -1,0 +1,68 @@
+<% content_for :page_title, "Products" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Products</h2>
+</div>
+
+<% if @products.any? %>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>Product Name</th>
+          <th>Campaign</th>
+          <th>Source</th>
+          <th>Latest Price</th>
+          <th>Discount</th>
+          <th>Last Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @products.each do |product| %>
+          <tr>
+            <td>
+              <strong><%= link_to truncate(product.name, length: 40), product_path(product) %></strong>
+            </td>
+            <td>
+              <%= link_to product.campaign.name, campaign_path(product.campaign), class: "text-decoration-none" %>
+            </td>
+            <td>
+              <span class="badge bg-info"><%= product.campaign.target_source %></span>
+            </td>
+            <td>
+              <% latest_price = product.price_histories.order(recorded_at: :desc).first %>
+              <% if latest_price %>
+                <strong><%= number_to_currency(latest_price.price, unit: "", precision: 0) %></strong>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </td>
+            <td>
+              <% latest_price = product.price_histories.order(recorded_at: :desc).first %>
+              <% if latest_price && latest_price.discount_rate %>
+                <span class="badge bg-danger"><%= latest_price.discount_rate %>%</span>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </td>
+            <td>
+              <small class="text-muted"><%= time_ago_in_words(product.updated_at) %> ago</small>
+            </td>
+            <td>
+              <%= link_to "View", product_path(product), class: "btn btn-sm btn-info" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <nav class="mt-4">
+    <%= paginate @products %>
+  </nav>
+<% else %>
+  <div class="alert alert-info">
+    No products found.
+  </div>
+<% end %>

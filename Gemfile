@@ -53,6 +53,9 @@ gem "faraday-retry"
 gem "chartkick"
 gem "groupdate"
 
+# Pagination
+gem "kaminari"
+
 # Full-text Search
 gem "pg_search"
 

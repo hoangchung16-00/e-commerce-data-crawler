@@ -1,0 +1,141 @@
+<% content_for :page_title, @product.name %>
+
+<div class="row">
+  <div class="col-md-8">
+    <div class="card mb-4">
+      <div class="card-header bg-light">
+        <h3 class="mb-0"><%= @product.name %></h3>
+      </div>
+      <div class="card-body">
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <% if @product.image_url %>
+              <%= image_tag @product.image_url, class: "img-fluid rounded", style: "max-height: 300px; object-fit: contain;" %>
+            <% else %>
+              <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 300px;">
+                <i class="bi bi-image" style="font-size: 3rem; color: #ccc;"></i>
+              </div>
+            <% end %>
+          </div>
+          <div class="col-md-8">
+            <table class="table table-bordered">
+              <tr>
+                <td class="text-muted">External ID:</td>
+                <td><strong><%= @product.external_id %></strong></td>
+              </tr>
+              <tr>
+                <td class="text-muted">Campaign:</td>
+                <td>
+                  <%= link_to @product.campaign.name, campaign_path(@product.campaign), class: "text-decoration-none" %>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">Source:</td>
+                <td><span class="badge bg-info"><%= @product.campaign.target_source %></span></td>
+              </tr>
+              <tr>
+                <td class="text-muted">URL:</td>
+                <td>
+                  <% if @product.url %>
+                    <%= link_to truncate(@product.url, length: 40), @product.url, target: "_blank", rel: "noopener" %>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
+                </td>
+              </tr>
+              <% if @product.raw_attributes.any? %>
+                <tr>
+                  <td class="text-muted">Attributes:</td>
+                  <td>
+                    <ul class="mb-0">
+                      <% @product.raw_attributes.each do |key, value| %>
+                        <li><strong><%= key %>:</strong> <%= value %></li>
+                      <% end %>
+                    </ul>
+                  </td>
+                </tr>
+              <% end %>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">Price History</h5>
+      </div>
+      <div class="card-body">
+        <% if @chart_data.any? %>
+          <div style="height: 400px;">
+            <%= line_chart @chart_data, title: "Price Trend (Last 30 Days)", height: "400px" %>
+          </div>
+        <% else %>
+          <p class="text-muted text-center py-4">No price history data available.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card mb-4">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">Latest Price</h5>
+      </div>
+      <div class="card-body text-center">
+        <% latest_price = @product.price_histories.order(recorded_at: :desc).first %>
+        <% if latest_price %>
+          <h2 class="text-primary mb-3">
+            <%= number_to_currency(latest_price.price, unit: "", precision: 0) %>
+          </h2>
+          <% if latest_price.discount_rate %>
+            <h5>
+              <span class="badge bg-danger">Discount: <%= latest_price.discount_rate %>%</span>
+            </h5>
+          <% end %>
+          <small class="text-muted">Updated <%= time_ago_in_words(latest_price.recorded_at) %> ago</small>
+        <% else %>
+          <p class="text-muted">No price data</p>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">Recent Prices</h5>
+      </div>
+      <div class="card-body">
+        <% if @price_histories.any? %>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Price</th>
+                  <th>Discount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @price_histories.take(10).each do |ph| %>
+                  <tr>
+                    <td><small><%= ph.recorded_at.strftime("%m/%d %H:%M") %></small></td>
+                    <td><strong><%= number_to_currency(ph.price, unit: "", precision: 0) %></strong></td>
+                    <td>
+                      <% if ph.discount_rate %>
+                        <small class="text-danger">-<%= ph.discount_rate %>%</small>
+                      <% else %>
+                        <span class="text-muted">-</span>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <p class="text-muted text-center py-3">No price records</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

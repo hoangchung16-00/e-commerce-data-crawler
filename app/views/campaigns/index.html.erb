@@ -1,0 +1,65 @@
+<% content_for :page_title, "Campaigns" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Campaigns</h2>
+  <%= link_to "New Campaign", new_campaign_path, class: "btn btn-primary" %>
+</div>
+
+<% if @campaigns.any? %>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>Name</th>
+          <th>Keyword</th>
+          <th>Source</th>
+          <th>Frequency</th>
+          <th>Status</th>
+          <th>Products</th>
+          <th>Last Crawled</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @campaigns.each do |campaign| %>
+          <tr>
+            <td><strong><%= link_to campaign.name, campaign_path(campaign) %></strong></td>
+            <td><%= campaign.keyword %></td>
+            <td><span class="badge bg-info"><%= campaign.target_source %></span></td>
+            <td><span class="badge bg-secondary"><%= campaign.frequency %></span></td>
+            <td>
+              <% if campaign.status == 'active' %>
+                <span class="badge bg-success">Active</span>
+              <% elsif campaign.status == 'paused' %>
+                <span class="badge bg-warning">Paused</span>
+              <% else %>
+                <span class="badge bg-danger">Stopped</span>
+              <% end %>
+            </td>
+            <td><span class="badge bg-light text-dark"><%= campaign.products.count %></span></td>
+            <td>
+              <% if campaign.last_crawled_at %>
+                <small class="text-muted"><%= time_ago_in_words(campaign.last_crawled_at) %> ago</small>
+              <% else %>
+                <span class="text-muted">Never</span>
+              <% end %>
+            </td>
+            <td>
+              <%= link_to "View", campaign_path(campaign), class: "btn btn-sm btn-info" %>
+              <%= link_to "Edit", edit_campaign_path(campaign), class: "btn btn-sm btn-warning" %>
+              <%= link_to "Delete", campaign_path(campaign), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-sm btn-danger" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <nav class="mt-4">
+    <%= paginate @campaigns %>
+  </nav>
+<% else %>
+  <div class="alert alert-info">
+    No campaigns yet. <%= link_to "Create your first campaign", new_campaign_path, class: "alert-link" %>
+  </div>
+<% end %>
