@@ -10,7 +10,11 @@ class Product < ApplicationRecord
   }
 
   def safe_url
-    # Only return URL if it's properly formatted
-    url.to_s.start_with?("http://", "https://") ? url : nil
+    return nil if url.blank?
+    parsed = URI.parse(url)
+    return nil unless parsed.is_a?(URI::HTTP)
+    parsed.to_s
+  rescue URI::InvalidURIError
+    nil
   end
 end
