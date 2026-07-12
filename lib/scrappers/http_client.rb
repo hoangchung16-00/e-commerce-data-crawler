@@ -1,7 +1,38 @@
 require "faraday"
 require "faraday/retry"
+require "zlib"
+require "stringio"
 
 module Scrappers
+  # Custom Faraday middleware for decompressing gzip responses
+  class GzipDecompressMiddleware < Faraday::Middleware
+    def call(env)
+      @app.call(env).on_complete do |response_env|
+        decompress_response(response_env)
+      end
+    end
+
+    private
+
+    def decompress_response(env)
+      # Only process if content-encoding indicates gzip
+      encoding = env.response_headers["content-encoding"]&.downcase
+      return unless encoding&.include?("gzip")
+
+      # Check if body is actually gzipped by looking for gzip magic bytes
+      return if env.body.nil? || env.body.empty?
+      return unless env.body.bytes[0] == 0x1f && env.body.bytes[1] == 0x8b
+
+      begin
+        io = StringIO.new(env.body)
+        decompressed = Zlib::GzipReader.new(io).read
+        env.body = decompressed
+      rescue Zlib::Error => e
+        warn "Failed to decompress gzip response: #{e.message}"
+      end
+    end
+  end
+
   class HttpClient
     USER_AGENTS = [
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -18,11 +49,11 @@ module Scrappers
     DEFAULT_RETRY_WAIT = 1
 
     def self.get(url, options = {})
-      new(options).get(url)
+      new(**options).get(url)
     end
 
     def self.post(url, body = {}, options = {})
-      new(options).post(url, body)
+      new(**options).post(url, body)
     end
 
     def initialize(timeout: DEFAULT_TIMEOUT, retries: DEFAULT_RETRIES, retry_wait: DEFAULT_RETRY_WAIT)
@@ -75,6 +106,10 @@ module Scrappers
         }
 
         faraday.request :url_encoded
+
+        # Add custom gzip decompression middleware
+        faraday.use GzipDecompressMiddleware
+
         faraday.adapter :net_http
         faraday.options.timeout = @timeout
         faraday.options.open_timeout = @timeout

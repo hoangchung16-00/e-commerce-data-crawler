@@ -6,7 +6,11 @@ Rails.application.routes.draw do
   get "dashboard", to: "pages#dashboard", as: :dashboard
 
   resources :campaigns do
-    resources :products, only: [ :index, :show ]
+    resources :products, only: [ :index, :show ] do
+      collection do
+        post :scrape
+      end
+    end
   end
 
   resources :products, only: [ :index, :show ] do

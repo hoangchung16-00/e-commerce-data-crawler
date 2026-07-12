@@ -291,11 +291,9 @@ RSpec.describe BaseScrapper, type: :lib do
       end
 
       it 'rolls back all changes' do
-        expect { scraper.send(:save_product, data) }.to raise_error(
-          ActiveRecord::RecordInvalid
-        )
-        expect(Product.count).to eq(0)
-        expect(PriceHistory.count).to eq(0)
+        expect { scraper.send(:save_product, data) }.to raise_error(ActiveRecord::RecordInvalid)
+        expect(Product.count).to be_zero
+        expect(PriceHistory.count).to be_zero
       end
     end
   end
