@@ -139,4 +139,94 @@ RSpec.describe "Products", type: :request do
       end
     end
   end
+
+  describe "POST /campaigns/:campaign_id/products/scrape" do
+    let(:scrape_url) { "https://tiki.vn/p/123456" }
+    let(:tiki_campaign) { create(:campaign, user: user, target_source: "tiki") }
+
+    context "when not signed in" do
+      before { sign_out user }
+
+      it "redirects to login" do
+        post "/campaigns/#{tiki_campaign.id}/products/scrape", params: { url: scrape_url }
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+
+    context "when signed in" do
+      context "with valid parameters" do
+        before do
+          allow_any_instance_of(Scrappers::TikiScrapper).to receive(:call).and_return(true)
+          allow_any_instance_of(Scrappers::TikiScrapper).to receive(:generate_external_id).and_return("123456")
+        end
+
+        it "returns http success" do
+          create(:product, campaign: tiki_campaign, external_id: "123456")
+          post "/campaigns/#{tiki_campaign.id}/products/scrape", params: { url: scrape_url }
+          expect(response).to have_http_status(:success)
+        end
+
+        it "returns json response" do
+          create(:product, campaign: tiki_campaign, external_id: "123456")
+          post "/campaigns/#{tiki_campaign.id}/products/scrape", params: { url: scrape_url }
+          expect(response.content_type).to include("application/json")
+        end
+
+        it "returns success message" do
+          create(:product, campaign: tiki_campaign, external_id: "123456")
+          post "/campaigns/#{tiki_campaign.id}/products/scrape", params: { url: scrape_url }
+          data = JSON.parse(response.body)
+          expect(data["success"]).to eq(true)
+        end
+
+        it "returns product data" do
+          product = create(:product, campaign: tiki_campaign, external_id: "123456")
+          create(:price_history, product: product, price: 500000, discount_rate: 10)
+          post "/campaigns/#{tiki_campaign.id}/products/scrape", params: { url: scrape_url }
+          data = JSON.parse(response.body)
+          expect(data["product"]["name"]).to eq(product.name)
+        end
+      end
+
+      context "with invalid parameters" do
+        it "returns error when URL is missing" do
+          post "/campaigns/#{tiki_campaign.id}/products/scrape", params: { url: "" }
+          data = JSON.parse(response.body)
+          expect(data["success"]).to eq(false)
+          expect(data["error"]).to include("URL is required")
+        end
+
+        it "returns error when URL format is invalid" do
+          post "/campaigns/#{tiki_campaign.id}/products/scrape", params: { url: "not-a-url" }
+          data = JSON.parse(response.body)
+          expect(data["success"]).to eq(false)
+          expect(data["error"]).to include("must start with")
+        end
+
+        it "returns 422 status for invalid URL" do
+          post "/campaigns/#{tiki_campaign.id}/products/scrape", params: { url: "invalid" }
+          expect(response).to have_http_status(:unprocessable_content)
+        end
+      end
+
+      context "with scraper errors" do
+        before do
+          allow_any_instance_of(Scrappers::TikiScrapper).to receive(:call)
+            .and_raise(Scrappers::ScraperError, "Network timeout")
+        end
+
+        it "returns error message from scraper" do
+          post "/campaigns/#{tiki_campaign.id}/products/scrape", params: { url: scrape_url }
+          data = JSON.parse(response.body)
+          expect(data["success"]).to eq(false)
+          expect(data["error"]).to include("Network timeout")
+        end
+
+        it "returns 422 status for scraper errors" do
+          post "/campaigns/#{tiki_campaign.id}/products/scrape", params: { url: scrape_url }
+          expect(response).to have_http_status(:unprocessable_content)
+        end
+      end
+    end
+  end
 end

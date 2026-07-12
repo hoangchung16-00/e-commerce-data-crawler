@@ -123,7 +123,10 @@ class BaseScrapper
   # Helper methods for subclasses
 
   def parse_html(html_string)
-    raise Scrappers::InvalidHTMLError, "HTML content is empty" if html_string.blank?
+    # Check if nil/empty first (without calling blank? on potentially invalid UTF-8)
+    if html_string.nil? || html_string.bytesize == 0
+      raise Scrappers::InvalidHTMLError, "HTML content is empty"
+    end
 
     doc = Nokogiri::HTML(html_string)
     raise Scrappers::InvalidHTMLError, "Failed to parse HTML" if doc.blank?

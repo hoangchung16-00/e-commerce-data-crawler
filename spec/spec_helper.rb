@@ -14,6 +14,15 @@
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 
+# Suppress duplicate constant warnings from bundled gems conflicting with Ruby 4.0 built-ins
+# (e.g. strscan-3.1.8 vs Ruby's built-in strscan-3.1.6)
+Warning.extend(Module.new do
+  def warn(msg, category: nil, **kwargs)
+    return if msg.include?("already initialized constant StringScanner::")
+    super
+  end
+end)
+
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest
