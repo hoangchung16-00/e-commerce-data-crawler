@@ -1,15 +1,9 @@
 require 'rails_helper'
 
-# Specs in this file have access to a helper object that includes
-# the CampaignsHelper. For example:
-#
-# describe CampaignsHelper do
-#   describe "string concat" do
-#     it "concats two strings with spaces" do
-#       expect(helper.concat_strings("this","that")).to eq("this that")
-#     end
-#   end
-# end
 RSpec.describe CampaignsHelper, type: :helper do
-  pending "add some examples to (or delete) #{__FILE__}"
+  describe "helper methods" do
+    it "has helper methods available" do
+      expect(helper.respond_to?(:campaigns_path)).to be_truthy
+    end
+  end
 end
